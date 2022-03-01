@@ -1,0 +1,40 @@
+#!/usr/bin/env groovy
+
+pipeline {
+ agent none
+  stages {
+    stage('Install CPQ Developer Toolkit') {
+      agent {
+        docker {
+          image 'adoptopenjdk/openjdk11:debian'
+          label 'dind'
+        }
+      }
+      environment {
+        region = 'us-east-1'
+      }
+      post {
+        success {
+          echo 'CPQ Initialization Success'
+        }
+        failure {
+          echo 'CPQ Initialization failed'
+        }
+      }
+      steps {
+        sh 'su root;apt update;apt update;apt install sudo wget -y'
+        sh 'ls && pwd'
+        sh 'sudo apt-get install git -y'
+        sh 'git --version && mkdir -p /opt/src/devCPQ && ls'
+        sh 'ls'
+        sh 'cd /opt/src/ && wget "https://help.bigmachines.com/BMIHelp/Content/DeveloperToolkit/CPQToolkit-unix.tar.gz" && pwd && ls'
+        sh 'cd /opt/src/ && tar -xzf CPQToolkit-unix.tar.gz && ls -lrth CPQToolkit-21.1.0-SNAPSHOT/*'
+        sh 'ls && pwd'
+        sh 'export PATH=$PATH:/opt/src/CPQToolkit-21.1.0-SNAPSHOT/bin  && cpq-toolkit init --register --host=https://newtempge.bigmachines.com && cpq-toolkit pull <input.txt'
+        //sh '/opt/src/CPQToolkit-21.1.0-SNAPSHOT/bin/cpq-toolkit pull << "/opt/src" '
+        //sh '/opt/src/CPQToolkit-21.1.0-SNAPSHOT/bin/cpq-toolkit pull <<< $"/tmp \n" '
+      
+      }
+    } 
+  }
+}
